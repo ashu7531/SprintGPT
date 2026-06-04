@@ -29,7 +29,7 @@ jobs:
           HF_USERNAME="ashu7531"
           
           # Clone the Hugging Face Space repository into a temporary directory
-          git clone https://huggingface.co/spaces/$HF_USERNAME/sprintgpt-backend hf_space
+          git clone https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/sprintgpt-backend hf_space
           
           # Copy backend files into the hf_space root directory
           cp -r backend/* hf_space/
