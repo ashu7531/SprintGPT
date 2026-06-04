@@ -28,8 +28,9 @@ WORKDIR /root/
 # Copy only the compiled binary from the builder stage
 COPY --from=builder /app/sprintgpt-server .
 
-# Expose the API port
-EXPOSE 8080
+# Set default port to 7860 for Hugging Face compatibility
+ENV PORT=7860
+EXPOSE 7860
 
 # Run the pre-compiled Go server binary
 CMD ["./sprintgpt-server"]
