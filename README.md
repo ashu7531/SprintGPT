@@ -2,6 +2,9 @@
 
 SprintGPT is a modern conversational assistant designed to bridge the gap between development teams and project workflows in Azure DevOps. By leveraging Google Gemini and vector search, it allows developers, scrum masters, and stakeholders to query task status, summarize sprint progress, and search internal wikis using natural language.
 
+🌐 **Live Production Backend URL:** [https://huggingface.co/spaces/ashu7531/sprintgpt-backend](https://huggingface.co/spaces/ashu7531/sprintgpt-backend)  
+*(Direct API endpoint: [https://ashu7531-sprintgpt-backend.hf.space](https://ashu7531-sprintgpt-backend.hf.space))*
+
 ---
 
 ## 🚀 Key Features
@@ -111,7 +114,7 @@ ALTER TABLE public.document_chunks ENABLE ROW LEVEL SECURITY;
 
 ## 📂 Documentation & Flow Charts
 For detailed diagrams and architectural blueprints, see:
-* **System Topology & Request Flow:** See [docs/flow.md](docs/flow.md)
+* **System Topology & Request Flow:** See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 * **Codebase Critique:** See [docs/critique.md](docs/critique.md)
 * **Gaps to Production Readiness:** See [docs/gap_to_production_grade.md](docs/gap_to_production_grade.md)
 * **Future Enhancement Roadmap:** See [docs/enhancements.md](docs/enhancements.md)

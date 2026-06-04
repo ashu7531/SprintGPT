@@ -1,4 +1,4 @@
-# System Flow & Architecture
+# System Architecture & Flow
 
 This document describes how SprintGPT's frontend, backend, databases, cache layers, and external APIs are connected, how data flows through the system, and where each piece of information is stored.
 
@@ -28,7 +28,7 @@ graph TD
 
 ---
 
-## 2. Where Data is Stored & Retreived
+## 2. Where Data is Stored & Retrieved
 
 ### 🗄️ Supabase PostgreSQL
 We store persistent data here. It is configured with **PGVector** for vector embeddings:
