@@ -30,13 +30,39 @@ func InitPostgres() error {
 		return fmt.Errorf("unable to parse database config: %w", err)
 	}
 
-	// Use custom dialer to force IPv4 (tcp4) as Hugging Face Spaces do not support IPv6 outbound
+	// Use custom dialer to force IPv4 (tcp4) as Hugging Face Spaces do not support IPv6 outbound.
+	// We override DNS resolution inside the dialer to resolve the host to IPv4 directly
+	// to prevent pgx from passing an IPv6 address string to tcp4 dialer.
 	dialer := &net.Dialer{
 		Timeout:   10 * time.Second,
 		KeepAlive: 5 * time.Minute,
 	}
 	config.DialFunc = func(ctx context.Context, network, addr string) (net.Conn, error) {
-		return dialer.DialContext(ctx, "tcp4", addr)
+		_, port, err := net.SplitHostPort(addr)
+		if err != nil {
+			return nil, err
+		}
+
+		// Resolve hostname to IPv4 address only
+		ips, err := net.LookupIP(config.Host)
+		if err != nil {
+			return nil, fmt.Errorf("DNS lookup failed for %s: %w", config.Host, err)
+		}
+
+		var ipv4 string
+		for _, ip := range ips {
+			if ip.To4() != nil {
+				ipv4 = ip.String()
+				break
+			}
+		}
+
+		if ipv4 == "" {
+			return nil, fmt.Errorf("no IPv4 address found for host %s", config.Host)
+		}
+
+		targetAddr := net.JoinHostPort(ipv4, port)
+		return dialer.DialContext(ctx, "tcp4", targetAddr)
 	}
 
 	// Connect to the database using config
