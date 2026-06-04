@@ -39,20 +39,7 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      if (!isConfigured) {
-        // If not configured, show a helpful message
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: 'assistant',
-            content:
-              '⚠️ **Azure DevOps not configured!**\n\nClick the ⚙️ settings button in the top-right to enter your organization, project, and PAT.\n\nI need these to fetch your data from Azure DevOps.',
-            intent: 'system',
-          },
-        ]);
-        setIsLoading(false);
-        return;
-      }
+      // Let the backend handle missing config by using its .env constants
 
       const response = await sendMessage(message, config);
 

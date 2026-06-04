@@ -2,7 +2,10 @@
 package config
 
 import (
+	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 // Config holds all application configuration.
@@ -13,6 +16,13 @@ type Config struct {
 
 // Load reads configuration from environment variables with sensible defaults.
 func Load() *Config {
+	// Try to load .env file; it's okay if it doesn't exist (e.g., in production)
+	if err := godotenv.Load("../../.env"); err != nil {
+		if err := godotenv.Load(".env"); err != nil {
+			log.Println("No .env file found, using system environment variables")
+		}
+	}
+
 	return &Config{
 		ServerPort: getEnv("SERVER_PORT", "8080"),
 		CORSOrigin: getEnv("CORS_ORIGIN", "http://localhost:5173"),

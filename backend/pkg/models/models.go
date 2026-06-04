@@ -6,14 +6,14 @@ import "time"
 // ChatRequest represents the incoming chat message from the user.
 type ChatRequest struct {
 	Message string      `json:"message" binding:"required"`
-	Context UserContext `json:"context" binding:"required"`
+	Context UserContext `json:"context"`
 }
 
 // UserContext holds the Azure DevOps connection details provided by the user.
 type UserContext struct {
-	Organization string `json:"organization" binding:"required"`
-	Project      string `json:"project" binding:"required"`
-	PAT          string `json:"pat" binding:"required"`
+	Organization string `json:"organization"`
+	Project      string `json:"project"`
+	PAT          string `json:"pat"`
 }
 
 // ChatResponse represents the response sent back to the user.

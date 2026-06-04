@@ -4,6 +4,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -50,12 +51,21 @@ func (h *ChatHandler) Handle(c *gin.Context) {
 		return
 	}
 
+	org := req.Context.Organization
+	if org == "" {
+		org = os.Getenv("AZURE_ORG")
+	}
+	proj := req.Context.Project
+	if proj == "" {
+		proj = os.Getenv("AZURE_PROJECT")
+	}
+	pat := req.Context.PAT
+	if pat == "" {
+		pat = os.Getenv("AZURE_PAT")
+	}
+
 	// Step 2: Create Azure DevOps client
-	adoClient := azuredevops.NewClient(
-		req.Context.Organization,
-		req.Context.Project,
-		req.Context.PAT,
-	)
+	adoClient := azuredevops.NewClient(org, proj, pat)
 
 	// Step 3: Execute based on detected intent
 	var response models.ChatResponse
