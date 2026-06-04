@@ -24,4 +24,4 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          huggingface-cli upload ashu7531/sprintgpt-backend ./backend . --repo-type=space --token=$HF_TOKEN
+          hf upload ashu7531/sprintgpt-backend ./backend . --repo-type=space --token=$HF_TOKEN
