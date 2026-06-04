@@ -11,3 +11,6 @@
 
 ### 🤖 Advanced AI Actions
 * **Write-action Agent:** Allow the AI assistant to perform write actions directly on Azure DevOps (e.g., creating a branch, drafting a pull request, or updating task statuses) upon chat commands.
+
+### 🚏 Message Broker & Event Streaming
+* **Apache Kafka Event Bus:** Integrate Kafka as an event streaming pipeline to handle high-throughput ingestion tasks asynchronously, decouple ingestion workers from webhooks, and enable real-time sync event broadcasting.
