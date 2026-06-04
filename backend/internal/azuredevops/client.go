@@ -189,8 +189,12 @@ func (c *Client) QueryWorkItems(wiql string, maxItems int) ([]models.WorkItem, e
 		c.organization, c.project, maxItems,
 	)
 
-	reqBody := fmt.Sprintf(`{"query": "%s"}`, wiql)
-	respBody, err := c.doRequest("POST", url, strings.NewReader(reqBody))
+	payload := map[string]string{"query": wiql}
+	jsonBytes, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal WIQL query payload: %w", err)
+	}
+	respBody, err := c.doRequest("POST", url, strings.NewReader(string(jsonBytes)))
 	if err != nil {
 		return nil, fmt.Errorf("WIQL query failed: %w", err)
 	}

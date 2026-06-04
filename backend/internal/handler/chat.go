@@ -162,7 +162,7 @@ func (h *ChatHandler) handleUserWork(client *azuredevops.Client, detected *model
 	}
 
 	// WIQL query for active items assigned to a user (fuzzy match)
-	wiql := fmt.Sprintf(`Select [System.Id], [System.Title], [System.State] From WorkItems Where [System.AssignedTo] Contains '%s' AND [System.State] NOT CONTAINS 'Closed' AND [System.State] NOT CONTAINS 'Done' AND [System.State] NOT CONTAINS 'Resolved'`, userName)
+	wiql := fmt.Sprintf(`Select [System.Id], [System.Title], [System.State] From WorkItems Where [System.AssignedTo] Contains '%s' AND [System.State] NOT CONTAINS 'Closed' AND [System.State] NOT CONTAINS 'Done' AND [System.State] NOT CONTAINS 'Resolved'`, escapeWIQL(userName))
 
 	items, err := client.QueryWorkItems(wiql, 10)
 	if err != nil {
@@ -493,7 +493,7 @@ func (h *ChatHandler) handleSprintHealth(client *azuredevops.Client, detected *m
 	}
 
 	// 2. Fetch all items in the current sprint (up to 100)
-	sprintWiql := fmt.Sprintf(`Select [System.Id], [System.Title], [System.State], [System.AssignedTo], [System.WorkItemType], [Microsoft.VSTS.Common.Priority], [System.Description] From WorkItems Where [System.IterationPath] = '%s'`, currentSprint)
+	sprintWiql := fmt.Sprintf(`Select [System.Id], [System.Title], [System.State], [System.AssignedTo], [System.WorkItemType], [Microsoft.VSTS.Common.Priority], [System.Description] From WorkItems Where [System.IterationPath] = '%s'`, escapeWIQL(currentSprint))
 	sprintItems, err := client.QueryWorkItems(sprintWiql, 100)
 	if err != nil {
 		response.Response = formatter.FormatError(err)
@@ -622,4 +622,11 @@ func (h *ChatHandler) handleSprintHealth(client *azuredevops.Client, detected *m
 	}
 
 	return response
+}
+
+// escapeWIQL escapes special characters like backslashes and single quotes for safe injection in WIQL queries.
+func escapeWIQL(s string) string {
+	s = strings.ReplaceAll(s, "\\", "\\\\")
+	s = strings.ReplaceAll(s, "'", "''")
+	return s
 }
