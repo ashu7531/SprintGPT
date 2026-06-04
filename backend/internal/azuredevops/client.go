@@ -2,6 +2,7 @@
 package azuredevops
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ashutosh/sprintgpt-backend/internal/cache"
 	"github.com/ashutosh/sprintgpt-backend/pkg/models"
 )
 
@@ -81,6 +83,12 @@ func (c *Client) doRequest(method, url string, body io.Reader) ([]byte, error) {
 
 // GetWorkItem fetches a single work item by its ID.
 func (c *Client) GetWorkItem(id int) (*models.WorkItem, error) {
+	cacheKey := fmt.Sprintf("workitem:%s:%s:%d", c.organization, c.project, id)
+	var cachedItem models.WorkItem
+	if err := cache.Get(context.Background(), cacheKey, &cachedItem); err == nil && cachedItem.ID != 0 {
+		return &cachedItem, nil
+	}
+
 	url := fmt.Sprintf(
 		"https://dev.azure.com/%s/%s/_apis/wit/workitems/%d?api-version=7.1&$expand=all",
 		c.organization, c.project, id,
@@ -118,7 +126,7 @@ func (c *Client) GetWorkItem(id int) (*models.WorkItem, error) {
 		return nil, fmt.Errorf("failed to parse work item response: %w", err)
 	}
 
-	return &models.WorkItem{
+	result := &models.WorkItem{
 		ID:            adoResponse.ID,
 		Title:         adoResponse.Fields.Title,
 		State:         adoResponse.Fields.State,
@@ -130,7 +138,10 @@ func (c *Client) GetWorkItem(id int) (*models.WorkItem, error) {
 		ChangedDate:   adoResponse.Fields.ChangedDate,
 		Description:   adoResponse.Fields.Description,
 		URL:           adoResponse.Links.HTML.Href,
-	}, nil
+	}
+
+	_ = cache.Set(context.Background(), cacheKey, result, 2*time.Minute)
+	return result, nil
 }
 
 // ValidateConnection checks if the provided credentials can access the project.
@@ -167,6 +178,12 @@ func (c *Client) ValidateConnection() (*models.ValidationResponse, error) {
 
 // QueryWorkItems executes a WIQL query and returns the matching work items.
 func (c *Client) QueryWorkItems(wiql string, maxItems int) ([]models.WorkItem, error) {
+	cacheKey := fmt.Sprintf("wiql:%s:%s:%s", c.organization, c.project, base64.StdEncoding.EncodeToString([]byte(wiql)))
+	var cachedResults []models.WorkItem
+	if err := cache.Get(context.Background(), cacheKey, &cachedResults); err == nil {
+		return cachedResults, nil
+	}
+
 	url := fmt.Sprintf(
 		"https://dev.azure.com/%s/%s/_apis/wit/wiql?$top=%d&api-version=7.1",
 		c.organization, c.project, maxItems,
@@ -260,5 +277,6 @@ func (c *Client) QueryWorkItems(wiql string, maxItems int) ([]models.WorkItem, e
 		})
 	}
 
+	_ = cache.Set(context.Background(), cacheKey, results, 1*time.Minute)
 	return results, nil
 }

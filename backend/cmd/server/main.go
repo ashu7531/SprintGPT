@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/ashutosh/sprintgpt-backend/internal/cache"
 	"github.com/ashutosh/sprintgpt-backend/internal/config"
 	"github.com/ashutosh/sprintgpt-backend/internal/handler"
 	"github.com/ashutosh/sprintgpt-backend/internal/intent"
@@ -22,6 +23,13 @@ import (
 func main() {
 	// Load configuration
 	cfg := config.Load()
+
+	// Initialize Redis Cache
+	if err := cache.Init(cfg.RedisURL); err != nil {
+		log.Printf("Warning: Failed to connect to Redis at %s: %v. Running without cache.", cfg.RedisURL, err)
+	} else {
+		log.Println("✅ Connected to Redis cache")
+	}
 
 	// Set Gin to release mode in production
 	// gin.SetMode(gin.ReleaseMode)
@@ -66,7 +74,6 @@ func main() {
 	addr := fmt.Sprintf(":%s", cfg.ServerPort)
 	log.Printf("🚀 SprintGPT backend starting on %s", addr)
 	log.Printf("📡 CORS allowed origin: %s", cfg.CORSOrigin)
-	log.Printf("🧠 Intent detector: keyword/regex (MVP)")
 
 	if err := router.Run(addr); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

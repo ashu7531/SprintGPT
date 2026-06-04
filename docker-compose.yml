@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8080/api/v1
+      - BACKEND_URL=http://backend:8080
+    depends_on:
+      - backend
+    # Map local files to container for hot-reloading
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8080:8080"
+    # Ensure backend uses the Redis container on the Docker network
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    # Map local files to container for hot-reloading
+    volumes:
+      - ./backend:/app
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379" # Map to 6380 on host to avoid conflict with your local Redis
+    volumes:
+      - redisdata:/data
+
+volumes:
+  redisdata:

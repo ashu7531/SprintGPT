@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { marked } from 'marked';
 
 export default function ChatWindow({ messages, isLoading }) {
   const messagesEndRef = useRef(null);
@@ -76,9 +77,16 @@ function MessageBubble({ message }) {
               : 'bg-surface-800 text-surface-200 border border-surface-700/50 rounded-tl-sm'
           }`}
         >
-          <div className="message-content whitespace-pre-wrap text-sm leading-relaxed text-surface-200">
-            {message.content || ''}
-          </div>
+          {isUser ? (
+            <div className="message-content whitespace-pre-wrap text-sm leading-relaxed">
+              {message.content || ''}
+            </div>
+          ) : (
+            <div 
+              className="message-content prose prose-invert prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: marked.parse(message.content || '') }}
+            />
+          )}
 
           {message.intent && !isUser && (
             <div className="mt-2 pt-2 border-t border-surface-700/30">
