@@ -1,0 +1,48 @@
+name: Sync to Hugging Face Hub
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          # Configure Git credentials
+          git config --global user.email "deploy-bot@sprintgpt.com"
+          git config --global user.name "Deploy Bot"
+          
+          # User's Hugging Face Username
+          HF_USERNAME="ashu7531"
+          
+          # Clone the Hugging Face Space repository into a temporary directory
+          git clone https://huggingface.co/spaces/$HF_USERNAME/sprintgpt-backend hf_space
+          
+          # Copy backend files into the hf_space root directory
+          cp -r backend/* hf_space/
+          
+          # Change directory to the clone and commit changes
+          cd hf_space
+          git add -A
+          
+          # Check if there are changes to commit
+          if git diff-index --quiet HEAD --; then
+            echo "No changes to deploy."
+          else
+            git commit -m "Deploy: Sync from GitHub commit ${GITHUB_SHA}"
+            # Push changes back to Hugging Face using the token as password
+            git push https://$HF_USERNAME:${HF_TOKEN}@huggingface.co/spaces/$HF_USERNAME/sprintgpt-backend main --force
+          fi

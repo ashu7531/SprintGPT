@@ -25,7 +25,7 @@ func Load() *Config {
 	}
 
 	return &Config{
-		ServerPort: getEnv("SERVER_PORT", "8080"),
+		ServerPort: getEnv("PORT", getEnv("SERVER_PORT", "8080")),
 		CORSOrigin: getEnv("CORS_ORIGIN", "http://localhost:5173"),
 		RedisURL:   getEnv("REDIS_URL", "redis://localhost:6379"),
 	}
