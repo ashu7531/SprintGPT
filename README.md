@@ -2,8 +2,56 @@
 
 SprintGPT is a modern conversational assistant designed to bridge the gap between development teams and project workflows in Azure DevOps. By leveraging Google Gemini and vector search, it allows developers, scrum masters, and stakeholders to query task status, summarize sprint progress, and search internal wikis using natural language.
 
-🌐 **Live Production Backend URL:** [https://huggingface.co/spaces/ashu7531/sprintgpt-backend](https://huggingface.co/spaces/ashu7531/sprintgpt-backend)  
-*(Direct API endpoint: [https://ashu7531-sprintgpt-backend.hf.space](https://ashu7531-sprintgpt-backend.hf.space))*
+🌐 **Live Application:** [https://sprint-gpt.vercel.app/](https://sprint-gpt.vercel.app/)
+
+---
+
+## 📖 User Guide (How to Use)
+
+### Step 1: Sign Up & Log In
+1. Open the [Live Application](https://sprint-gpt.vercel.app/).
+2. Sign up with your email or log in if you already have an account.
+
+### Step 2: Create your Azure DevOps PAT (Personal Access Token)
+SprintGPT needs secure read access to fetch your board items and wikis.
+1. Go to Azure DevOps (`https://dev.azure.com/{your-organization}`).
+2. In the top-right corner, click **User Settings** (gear icon) ➡️ **Personal Access Tokens**.
+3. Click **+ New Token**.
+4. Set the expiration date and enable these scopes:
+   * **Work Items:** `Read` (for tasks, bugs, and backlog checks)
+   * **Project and Team:** `Read` (for sprint and board configurations)
+   * **Wiki:** `Read` (for documentation chunking and RAG indexing)
+   * **Graph:** `Read` (for looking up team members)
+5. Click **Create** and copy your token (keep it secret!).
+
+### Step 3: Connect Your Project
+1. In the SprintGPT interface, click the **Settings (⚙️)** icon in the sidebar.
+2. Fill in:
+   * **Organization Name:** The organization name from your DevOps URL (`dev.azure.com/{organization}`).
+   * **Project Name:** The exact name of your Azure DevOps project.
+   * **Personal Access Token:** The token you copied in Step 2.
+3. Click **Save & Connect**. The backend will save your config and start indexing your wiki pages in the background.
+
+---
+
+## 💬 Conversation Guidelines (What to Ask)
+
+SprintGPT automatically routes your questions using natural language. Here are examples of queries you can ask:
+
+### 📊 Sprint Summaries
+* *"Summarize our current active sprint"*
+* *"What is the progress of iteration 4?"*
+* *"Show all active tasks on the board"*
+
+### 📝 Task Status & Details
+* *"What is the status of task 1045?"*
+* *"Show details for bug 2049"*
+* *"Who is assigned to user story 982?"*
+
+### 📚 Wiki & RAG Knowledge Search
+* *"What are the details of the IVR API?"*
+* *"Explain our codebase setup guide from the wiki"*
+* *"How does the DB backup system work?"*
 
 ---
 
