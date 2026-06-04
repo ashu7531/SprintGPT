@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"time"
 
@@ -23,14 +24,29 @@ func InitPostgres() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// 1. Connect to the database
-	conn, err := pgx.Connect(ctx, dbURL)
+	// Parse database configuration
+	config, err := pgx.ParseConfig(dbURL)
+	if err != nil {
+		return fmt.Errorf("unable to parse database config: %w", err)
+	}
+
+	// Use custom dialer to force IPv4 (tcp4) as Hugging Face Spaces do not support IPv6 outbound
+	dialer := &net.Dialer{
+		Timeout:   10 * time.Second,
+		KeepAlive: 5 * time.Minute,
+	}
+	config.DialFunc = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		return dialer.DialContext(ctx, "tcp4", addr)
+	}
+
+	// Connect to the database using config
+	conn, err := pgx.ConnectConfig(ctx, config)
 	if err != nil {
 		return fmt.Errorf("unable to connect to database: %w", err)
 	}
 	Conn = conn
 
-	log.Println("✅ Connected to PostgreSQL (Supabase)")
+	log.Println("✅ Connected to PostgreSQL (Supabase) via IPv4")
 
 	// 2. Enable pgvector extension and create table
 	initSQL := `
