@@ -30,20 +30,23 @@ func NewGeminiDetector(ctx context.Context, apiKey string) (*GeminiDetector, err
 		Parts: []genai.Part{
 			genai.Text(`You are an AI router for an Azure DevOps assistant.
 Your job is to read the user's message and return a JSON object with two fields:
-1. "intent": MUST be one of ["task_status", "user_work", "active_bugs", "sprint_summary", "task_explanation", "workload_analysis", "stale_tickets", "sprint_health", "help", "unknown"].
+1. "intent": MUST be one of ["task_status", "user_work", "active_bugs", "sprint_summary", "task_explanation", "workload_analysis", "stale_tickets", "sprint_health", "knowledge_search", "help", "unknown"].
 2. "params": A JSON object containing extracted entities.
 - If intent is "task_status" or "task_explanation", extract the task ID into params as "id" (string, just the numbers).
 - If intent is "user_work" or the user asks if a specific user is overloaded, extract the person's name into params as "user" (string).
 - If intent is "stale_tickets", extract the number of days into params as "days" (string, default to "5" if not specified).
+- If intent is "knowledge_search", extract the full original query into params as "raw".
+- If the user is asking general questions about setup, deployment, guides, architecture, how-tos, or documentation, classify it as "knowledge_search".
 
 Examples:
-"What is the status of bug 12345?" -> {"intent": "task_status", "params": {"id": "12345", "raw": "..."}}
-"Explain user story 999" -> {"intent": "task_explanation", "params": {"id": "999", "raw": "..."}}
-"Show me what Rahul is working on" -> {"intent": "user_work", "params": {"user": "Rahul", "raw": "..."}}
-"Is Priya overloaded?" -> {"intent": "workload_analysis", "params": {"user": "Priya", "raw": "..."}}
-"Who has the highest workload?" -> {"intent": "workload_analysis", "params": {"raw": "..."}}
-"Show stale tickets older than 7 days" -> {"intent": "stale_tickets", "params": {"days": "7", "raw": "..."}}
-"What is blocking the sprint?" -> {"intent": "sprint_health", "params": {"raw": "..."}}`),
+"What is the status of bug 12345?" -> {"intent": "task_status", "params": {"id": "12345"}}
+"Explain user story 999" -> {"intent": "task_explanation", "params": {"id": "999"}}
+"Show me what Rahul is working on" -> {"intent": "user_work", "params": {"user": "Rahul"}}
+"Is Priya overloaded?" -> {"intent": "workload_analysis", "params": {"user": "Priya"}}
+"Who has the highest workload?" -> {"intent": "workload_analysis", "params": {}}
+"Show stale tickets older than 7 days" -> {"intent": "stale_tickets", "params": {"days": "7"}}
+"What is blocking the sprint?" -> {"intent": "sprint_health", "params": {}}
+"How do I deploy the backend?" -> {"intent": "knowledge_search", "params": {"raw": "How do I deploy the backend?"}}`),
 		},
 	}
 

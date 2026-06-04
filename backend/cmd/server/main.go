@@ -15,6 +15,7 @@ import (
 
 	"github.com/ashutosh/sprintgpt-backend/internal/cache"
 	"github.com/ashutosh/sprintgpt-backend/internal/config"
+	"github.com/ashutosh/sprintgpt-backend/internal/database"
 	"github.com/ashutosh/sprintgpt-backend/internal/handler"
 	"github.com/ashutosh/sprintgpt-backend/internal/intent"
 	"github.com/ashutosh/sprintgpt-backend/internal/middleware"
@@ -30,6 +31,12 @@ func main() {
 	} else {
 		log.Println("✅ Connected to Redis cache")
 	}
+
+	// Initialize PostgreSQL (Supabase)
+	if err := database.InitPostgres(); err != nil {
+		log.Fatalf("Critical: Failed to initialize PostgreSQL database: %v", err)
+	}
+	defer database.Close()
 
 	// Set Gin to release mode in production
 	// gin.SetMode(gin.ReleaseMode)
@@ -66,8 +73,11 @@ func main() {
 	api := router.Group("/api/v1")
 	{
 		api.GET("/health", handler.Health())
-		api.POST("/chat", chatHandler.Handle)
+		api.POST("/chat", middleware.AuthMiddleware(), chatHandler.Handle)
 		api.POST("/config/validate", handler.ValidateConfig())
+		api.POST("/config/save", middleware.AuthMiddleware(), handler.SaveUserConfig())
+		api.GET("/config/load", middleware.AuthMiddleware(), handler.GetUserConfig())
+		api.POST("/admin/ingest", handler.HandleIngest())
 	}
 
 	// Start server

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { validateConfig } from '../../services/api';
+import { validateConfig, saveUserConfig } from '../../services/api';
 
-export default function ConfigPanel({ config, setConfig, onClose }) {
+export default function ConfigPanel({ config, setConfig, session, onClose }) {
   const [formData, setFormData] = useState({
     organization: config.organization || '',
     project: config.project || '',
@@ -27,10 +27,20 @@ export default function ConfigPanel({ config, setConfig, onClose }) {
     setValidating(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setConfig(formData);
-    // Save to localStorage for persistence
+    // Save to localStorage for local backup persistence
     localStorage.setItem('sprintgpt-config', JSON.stringify(formData));
+
+    // Sync configuration to the database
+    if (session?.access_token) {
+      try {
+        await saveUserConfig(formData, session.access_token);
+      } catch (err) {
+        console.error('Failed to sync config to cloud database:', err);
+      }
+    }
+
     onClose();
   };
 

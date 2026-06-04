@@ -13,6 +13,8 @@ import (
 
 	"github.com/ashutosh/sprintgpt-backend/internal/cache"
 	"github.com/ashutosh/sprintgpt-backend/pkg/models"
+	"log"
+	"net/url"
 )
 
 // Client is an HTTP client for Azure DevOps APIs.
@@ -283,4 +285,136 @@ func (c *Client) QueryWorkItems(wiql string, maxItems int) ([]models.WorkItem, e
 
 	_ = cache.Set(context.Background(), cacheKey, results, 1*time.Minute)
 	return results, nil
+}
+
+// WikiPage represents a page's metadata and content.
+type WikiPage struct {
+	Title   string
+	Content string
+	URL     string
+}
+
+// WikiPageMeta represents recursive page metadata structure from Azure DevOps.
+type WikiPageMeta struct {
+	Path     string         `json:"path"`
+	SubPages []WikiPageMeta `json:"subPages"`
+}
+
+// flattenPages recursively flattens subpages into a slice of paths.
+func flattenPages(pages []WikiPageMeta) []string {
+	var paths []string
+	for _, p := range pages {
+		if p.Path != "" {
+			paths = append(paths, p.Path)
+		}
+		if len(p.SubPages) > 0 {
+			paths = append(paths, flattenPages(p.SubPages)...)
+		}
+	}
+	return paths
+}
+
+// FetchAllWikiPages retrieves all wiki pages and their contents from the project.
+func (c *Client) FetchAllWikiPages() ([]WikiPage, error) {
+	// 1. Get wikis list
+	wikisUrl := fmt.Sprintf("https://dev.azure.com/%s/%s/_apis/wiki/wikis?api-version=7.1", c.organization, c.project)
+	respBody, err := c.doRequest("GET", wikisUrl, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list wikis: %w", err)
+	}
+
+	var wikisResp struct {
+		Value []struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+		} `json:"value"`
+	}
+	if err := json.Unmarshal(respBody, &wikisResp); err != nil {
+		return nil, fmt.Errorf("failed to parse wikis response: %w", err)
+	}
+
+	if len(wikisResp.Value) == 0 {
+		return nil, nil // No wikis found
+	}
+
+	// Fetch pages for the first wiki (usually the default project wiki)
+	wikiId := wikisResp.Value[0].ID
+
+	pagesUrl := fmt.Sprintf("https://dev.azure.com/%s/%s/_apis/wiki/wikis/%s/pages?recursionLevel=full&api-version=7.1", c.organization, c.project, wikiId)
+	pagesBody, err := c.doRequest("GET", pagesUrl, nil)
+	if err != nil {
+		// If project has no wiki content or returns 404, just return empty list
+		return nil, nil
+	}
+
+	var pagesResp struct {
+		Path     string         `json:"path"`
+		SubPages []WikiPageMeta `json:"subPages"`
+	}
+	if err := json.Unmarshal(pagesBody, &pagesResp); err != nil {
+		return nil, fmt.Errorf("failed to parse pages response: %w", err)
+	}
+
+	// Flatten page paths
+	var paths []string
+	if pagesResp.Path != "" && pagesResp.Path != "/" {
+		paths = append(paths, pagesResp.Path)
+	}
+	paths = append(paths, flattenPages(pagesResp.SubPages)...)
+
+	var wikiPages []WikiPage
+	for _, path := range paths {
+		if path == "/" || path == "" {
+			continue
+		}
+
+		// URL encode path segments (keeping slashes)
+		segments := strings.Split(path, "/")
+		var encodedSegments []string
+		for _, s := range segments {
+			if s != "" {
+				encodedSegments = append(encodedSegments, url.PathEscape(s))
+			}
+		}
+		encodedPath := strings.Join(encodedSegments, "/")
+
+		pageUrl := fmt.Sprintf(
+			"https://dev.azure.com/%s/%s/_apis/wiki/wikis/%s/pages/%s?includeContent=true&api-version=7.1",
+			c.organization, c.project, wikiId, encodedPath,
+		)
+
+		contentBody, err := c.doRequest("GET", pageUrl, nil)
+		if err != nil {
+			// If we fail to fetch one page, log warning and continue
+			log.Printf("Warning: Failed to fetch wiki content for path %s: %v", path, err)
+			continue
+		}
+
+		var contentResp struct {
+			Path      string `json:"path"`
+			Content   string `json:"content"`
+			RemoteURL string `json:"remoteUrl"`
+		}
+		if err := json.Unmarshal(contentBody, &contentResp); err != nil {
+			log.Printf("Warning: Failed to parse wiki content for path %s: %v", path, err)
+			continue
+		}
+
+		if strings.TrimSpace(contentResp.Content) == "" {
+			continue
+		}
+
+		// Create readable title from path (e.g., /My-Cool-Page -> My Cool Page)
+		title := strings.TrimPrefix(path, "/")
+		title = strings.ReplaceAll(title, "-", " ")
+		title = strings.ReplaceAll(title, "_", " ")
+
+		wikiPages = append(wikiPages, WikiPage{
+			Title:   title,
+			Content: contentResp.Content,
+			URL:     contentResp.RemoteURL,
+		})
+	}
+
+	return wikiPages, nil
 }

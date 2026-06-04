@@ -15,6 +15,7 @@ import (
 	"github.com/ashutosh/sprintgpt-backend/internal/azuredevops"
 	"github.com/ashutosh/sprintgpt-backend/internal/formatter"
 	"github.com/ashutosh/sprintgpt-backend/internal/intent"
+	"github.com/ashutosh/sprintgpt-backend/internal/rag"
 	"github.com/ashutosh/sprintgpt-backend/pkg/models"
 )
 
@@ -106,6 +107,9 @@ func (h *ChatHandler) Handle(c *gin.Context) {
 
 	case "sprint_summary":
 		response = h.handleSprintSummary(adoClient, detected, response)
+
+	case "knowledge_search", "unknown":
+		response = h.handleKnowledgeSearch(org, proj, detected, response)
 
 	default:
 		response.Response = formatter.FormatUnknownIntent(detected.Params["raw"])
@@ -629,4 +633,22 @@ func escapeWIQL(s string) string {
 	s = strings.ReplaceAll(s, "\\", "\\\\")
 	s = strings.ReplaceAll(s, "'", "''")
 	return s
+}
+
+// handleKnowledgeSearch searches the local pgvector document database and uses Gemini to answer.
+func (h *ChatHandler) handleKnowledgeSearch(org string, proj string, detected *models.DetectedIntent, response models.ChatResponse) models.ChatResponse {
+	query, ok := detected.Params["raw"]
+	if !ok || strings.TrimSpace(query) == "" {
+		response.Response = "Please ask a question about your project documentation."
+		return response
+	}
+
+	answer, err := rag.SearchAndAnswer(context.Background(), org, proj, query)
+	if err != nil {
+		response.Response = fmt.Sprintf("❌ **Error searching knowledge base:** %v", err)
+		return response
+	}
+
+	response.Response = answer
+	return response
 }

@@ -2,25 +2,56 @@ import { useState, useEffect } from 'react';
 import ChatWindow from './components/Chat/ChatWindow';
 import InputBar from './components/Chat/InputBar';
 import ConfigPanel from './components/Settings/ConfigPanel';
-import { sendMessage, checkHealth } from './services/api';
+import Auth from './components/Auth/Auth';
+import { sendMessage, checkHealth, loadUserConfig } from './services/api';
+import { supabase } from './utils/supabase';
 
 export default function App() {
+  const [session, setSession] = useState(null);
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
   const [config, setConfig] = useState({ organization: '', project: '', pat: '' });
   const [serverStatus, setServerStatus] = useState('checking');
 
-  // Load config from localStorage on mount
+  // Load config from database when user session is loaded
   useEffect(() => {
-    const saved = localStorage.getItem('sprintgpt-config');
-    if (saved) {
-      try {
-        setConfig(JSON.parse(saved));
-      } catch (e) {
-        // ignore bad data
-      }
+    if (session?.access_token) {
+      loadUserConfig(session.access_token)
+        .then((savedConfig) => {
+          if (savedConfig && savedConfig.organization) {
+            setConfig(savedConfig);
+          } else {
+            // Fallback to localStorage if database does not contain config yet
+            const saved = localStorage.getItem('sprintgpt-config');
+            if (saved) {
+              try {
+                setConfig(JSON.parse(saved));
+              } catch (e) {
+                // ignore bad data
+              }
+            }
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to load user config from database:', err);
+        });
     }
+  }, [session]);
+
+  // Listen to Supabase Auth changes
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Check backend health on mount
@@ -39,9 +70,8 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      // Let the backend handle missing config by using its .env constants
-
-      const response = await sendMessage(message, config);
+      // Send message including the active session token
+      const response = await sendMessage(message, config, session?.access_token);
 
       setMessages((prev) => [
         ...prev,
@@ -65,6 +95,11 @@ export default function App() {
 
     setIsLoading(false);
   };
+
+  // If there is no active session, show the Login/Signup screen
+  if (!session) {
+    return <Auth onAuthSuccess={(sess) => setSession(sess)} />;
+  }
 
   return (
     <div className="h-full flex flex-col bg-surface-950">
@@ -117,6 +152,15 @@ export default function App() {
           >
             ⚙️
           </button>
+
+          {/* Logout button */}
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="w-9 h-9 rounded-xl hover:bg-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-200 transition-colors"
+            title="Sign Out"
+          >
+            🚪
+          </button>
         </div>
       </header>
 
@@ -128,7 +172,7 @@ export default function App() {
 
       {/* Config modal */}
       {showConfig && (
-        <ConfigPanel config={config} setConfig={setConfig} onClose={() => setShowConfig(false)} />
+        <ConfigPanel config={config} setConfig={setConfig} session={session} onClose={() => setShowConfig(false)} />
       )}
     </div>
   );

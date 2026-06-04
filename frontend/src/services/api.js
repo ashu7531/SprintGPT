@@ -8,10 +8,15 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
  * @param {Object} context - Azure DevOps config {organization, project, pat}
  * @returns {Promise<Object>} - Chat response
  */
-export async function sendMessage(message, context) {
+export async function sendMessage(message, context, token) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const response = await fetch(`${API_BASE}/chat`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({ message, context }),
   });
 
@@ -33,6 +38,44 @@ export async function validateConfig(config) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(config),
+  });
+
+  return response.json();
+}
+
+/**
+ * Save user configuration to the cloud database.
+ * @param {Object} config - {organization, project, pat}
+ * @param {string} token - Session token
+ * @returns {Promise<Object>} - Save result
+ */
+export async function saveUserConfig(config, token) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  const response = await fetch(`${API_BASE}/config/save`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(config),
+  });
+
+  return response.json();
+}
+
+/**
+ * Load user configuration from the cloud database.
+ * @param {string} token - Session token
+ * @returns {Promise<Object>} - Configuration object
+ */
+export async function loadUserConfig(token) {
+  const headers = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  const response = await fetch(`${API_BASE}/config/load`, {
+    method: 'GET',
+    headers,
   });
 
   return response.json();
