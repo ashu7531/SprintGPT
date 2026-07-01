@@ -1,53 +1,70 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { marked } from 'marked';
+import { DataCard } from './ChatCards';
 
-export default function ChatWindow({ messages, isLoading }) {
+marked.setOptions({ breaks: true, gfm: true });
+
+const SparklesIcon = ({ size = 16, color = '#34d399' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={color} style={{ width: `${size}px`, height: `${size}px` }}>
+    <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+  </svg>
+);
+
+export default function ChatWindow({ messages, isLoading, onSuggestionClick }) {
   const messagesEndRef = useRef(null);
 
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
+  if (messages.length === 0 && !isLoading) {
+    return (
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px' }}>
+        <EmptyState onSuggestionClick={onSuggestionClick} />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-      {messages.length === 0 && !isLoading && (
-        <div className="flex flex-col items-center justify-center h-full text-center px-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center mb-6 logo-glow">
-            <span className="text-3xl">⚡</span>
-          </div>
-          <h2 className="text-2xl font-bold text-surface-100 mb-2">
-            Welcome to SprintGPT
-          </h2>
-          <p className="text-surface-400 max-w-md mb-8">
-            Your AI-powered Azure DevOps assistant. Ask me about tasks, bugs, sprints, and more.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg w-full">
-            {[
-              { icon: '🔍', text: 'What is the status of task 123?' },
-              { icon: '👤', text: 'What is Rahul working on?' },
-              { icon: '🐛', text: 'Show active bugs' },
-              { icon: '📊', text: 'Sprint summary' },
-            ].map((example, i) => (
-              <div
-                key={i}
-                className="p-3 rounded-xl bg-surface-800/50 border border-surface-700/50 text-sm text-surface-300 hover:bg-surface-800 hover:border-primary-500/30 transition-all duration-200 cursor-default"
-              >
-                <span className="mr-2">{example.icon}</span>
-                {example.text}
-              </div>
-            ))}
-          </div>
+    <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ maxWidth: '760px', margin: '0 auto', padding: '40px 48px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          {messages.map((msg, index) => (
+            <MessageBubble key={index} message={msg} />
+          ))}
+          {isLoading && <TypingIndicator />}
+          <div ref={messagesEndRef} />
         </div>
-      )}
+      </div>
+    </div>
+  );
+}
 
-      {messages.map((msg, index) => (
-        <MessageBubble key={index} message={msg} />
-      ))}
-
-      {isLoading && <TypingIndicator />}
-
-      <div ref={messagesEndRef} />
+function EmptyState({ onSuggestionClick }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+      <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+        <SparklesIcon size={24} color="white" />
+      </div>
+      <h2 style={{ fontSize: '24px', fontWeight: 600, color: '#fafafa', marginBottom: '8px' }}>What can I help with?</h2>
+      <p style={{ color: '#a3a3a3', fontSize: '15px', maxWidth: '420px', marginBottom: '32px', lineHeight: 1.6 }}>Ask me about your Azure DevOps tasks, bugs, sprints, or team workload.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', maxWidth: '480px' }}>
+        {[
+          { icon: '🔍', text: 'Status of task #123' },
+          { icon: '👤', text: 'What is Rahul working on?' },
+          { icon: '🐛', text: 'Show active bugs' },
+          { icon: '📊', text: 'Sprint summary' },
+        ].map((example, i) => (
+          <div
+            key={i}
+            onClick={() => onSuggestionClick && onSuggestionClick(example.text)}
+            style={{ padding: '16px', borderRadius: '12px', border: '1px solid #404040', fontSize: '14px', color: '#d4d4d4', textAlign: 'center', cursor: 'pointer' }}
+          >
+            <span style={{ display: 'block', fontSize: '18px', marginBottom: '6px' }}>{example.icon}</span>
+            <span>{example.text}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -55,47 +72,45 @@ export default function ChatWindow({ messages, isLoading }) {
 function MessageBubble({ message }) {
   const isUser = message.role === 'user';
 
+  if (isUser) {
+    return (
+      <div className="message-enter" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ maxWidth: '70%', backgroundColor: '#059669', color: 'white', borderRadius: '20px 20px 4px 20px', padding: '14px 20px', fontSize: '15px', lineHeight: 1.6 }}>
+          <div style={{ whiteSpace: 'pre-wrap' }}>{message.content || ''}</div>
+        </div>
+      </div>
+    );
+  }
+
+  const hasData = message.data && (typeof message.data === 'object');
+  const intent = message.intent;
+
   return (
-    <div className={`message-enter flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`flex items-start gap-3 max-w-[80%] ${isUser ? 'flex-row-reverse' : ''}`}>
-        {/* Avatar */}
-        <div
-          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-sm font-semibold ${
-            isUser
-              ? 'bg-primary-600 text-white'
-              : 'bg-gradient-to-br from-primary-500 to-purple-600 text-white'
-          }`}
-        >
-          {isUser ? 'U' : '⚡'}
+    <div className="message-enter" style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#262626', border: '1px solid #404040', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <SparklesIcon size={16} color="#34d399" />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {hasData && <DataCard intent={intent} data={message.data} />}
+
+        <div style={{ backgroundColor: '#1f1f1f', border: '1px solid #2e2e2e', borderRadius: '16px 16px 16px 4px', padding: '16px 20px', marginTop: hasData ? '10px' : '0' }}>
+          <div style={{ fontSize: '11px', color: '#737373', marginBottom: '8px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            {hasData ? 'AI Summary' : 'Response'}
+          </div>
+          <div
+            className="message-content"
+            style={{ fontSize: '14px', lineHeight: 1.8, color: '#e5e5e5' }}
+            dangerouslySetInnerHTML={{ __html: marked.parse(message.content || '') }}
+          />
         </div>
 
-        {/* Message bubble */}
-        <div
-          className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-            isUser
-              ? 'bg-primary-600 text-white rounded-tr-sm'
-              : 'bg-surface-800 text-surface-200 border border-surface-700/50 rounded-tl-sm'
-          }`}
-        >
-          {isUser ? (
-            <div className="message-content whitespace-pre-wrap text-sm leading-relaxed">
-              {message.content || ''}
-            </div>
-          ) : (
-            <div 
-              className="message-content prose prose-invert prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: marked.parse(message.content || '') }}
-            />
-          )}
-
-          {message.intent && !isUser && (
-            <div className="mt-2 pt-2 border-t border-surface-700/30">
-              <span className="text-xs px-2 py-0.5 rounded-full bg-primary-500/20 text-primary-300 font-medium">
-                {message.intent}
-              </span>
-            </div>
-          )}
-        </div>
+        {intent && (
+          <div style={{ marginTop: '8px' }}>
+            <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', backgroundColor: '#262626', border: '1px solid #333', color: '#737373', fontWeight: 500 }}>
+              {intent}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -103,18 +118,14 @@ function MessageBubble({ message }) {
 
 function TypingIndicator() {
   return (
-    <div className="message-enter flex justify-start">
-      <div className="flex items-start gap-3">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-sm text-white">
-          ⚡
-        </div>
-        <div className="bg-surface-800 border border-surface-700/50 rounded-2xl rounded-tl-sm px-4 py-3">
-          <div className="flex gap-1.5">
-            <div className="typing-dot w-2 h-2 rounded-full bg-primary-400" />
-            <div className="typing-dot w-2 h-2 rounded-full bg-primary-400" />
-            <div className="typing-dot w-2 h-2 rounded-full bg-primary-400" />
-          </div>
-        </div>
+    <div className="message-enter" style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#262626', border: '1px solid #404040', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <SparklesIcon size={16} color="#34d399" />
+      </div>
+      <div style={{ display: 'flex', gap: '6px', paddingTop: '12px' }}>
+        <div className="typing-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#737373' }} />
+        <div className="typing-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#737373' }} />
+        <div className="typing-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#737373' }} />
       </div>
     </div>
   );
