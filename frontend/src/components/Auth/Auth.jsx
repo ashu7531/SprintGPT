@@ -17,133 +17,98 @@ export default function Auth({ onAuthSuccess }) {
 
     try {
       if (isRegistering) {
-        // Sign Up
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
+        const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        
-        // Supabase sends a confirmation email by default
-        setSuccessMsg('Registration successful! Please check your email for a confirmation link.');
+        setSuccessMsg('Registration successful! Check your email for a confirmation link.');
       } else {
-        // Sign In
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        
-        if (data?.session) {
-          onAuthSuccess(data.session);
-        }
+        if (data?.session) onAuthSuccess(data.session);
       }
     } catch (err) {
-      setErrorMsg(err.message || 'An error occurred during authentication');
+      setErrorMsg(err.message || 'An error occurred');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-radial from-surface-900 to-surface-950 px-4">
-      {/* Background glowing blobs */}
-      <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-primary-600/10 rounded-full blur-3xl animate-pulse pointer-events-none" />
-
-      {/* Auth Card */}
-      <div className="w-full max-w-md p-8 rounded-2xl border border-surface-800 bg-surface-900/60 backdrop-blur-xl shadow-2xl flex flex-col items-center">
-        {/* Logo Icon */}
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center mb-6 logo-glow">
-          <span className="text-2xl">⚡</span>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0a0a0a', padding: '16px' }}>
+      <div style={{ width: '100%', maxWidth: '380px' }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" style={{ width: '24px', height: '24px' }}>
+              <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+            </svg>
+          </div>
         </div>
 
-        <h2 className="text-2xl font-bold text-surface-500 mb-2">
-          {isRegistering ? 'Create your Account' : 'Welcome back'}
+        <h2 style={{ fontSize: '22px', fontWeight: 600, color: '#fafafa', textAlign: 'center', margin: '0 0 6px' }}>
+          {isRegistering ? 'Create an account' : 'Welcome back'}
         </h2>
-        <p className="text-sm text-surface-400 mb-8 text-center">
-          {isRegistering
-            ? 'Start collaborating and summarizing Azure DevOps sprints'
-            : 'Sign in to access SprintGPT AI Assistant'}
+        <p style={{ fontSize: '14px', color: '#737373', textAlign: 'center', margin: '0 0 32px' }}>
+          {isRegistering ? 'Get started with SprintGPT' : 'Sign in to your account'}
         </p>
 
-        <form onSubmit={handleSubmit} className="w-full space-y-5">
-          {/* Email input */}
-          <div>
-            <label className="block text-xs font-semibold text-surface-400 mb-2 uppercase tracking-wide">
-              Email Address
-            </label>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#d4d4d4', marginBottom: '8px' }}>Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 rounded-xl border border-surface-800 bg-surface-950/50 text-surface-100 placeholder-surface-650 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all text-sm"
               placeholder="you@example.com"
+              style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #404040', backgroundColor: '#171717', color: '#f5f5f5', fontSize: '14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
           </div>
 
-          {/* Password input */}
-          <div>
-            <label className="block text-xs font-semibold text-surface-400 mb-2 uppercase tracking-wide">
-              Password
-            </label>
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#d4d4d4', marginBottom: '8px' }}>Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-3 rounded-xl border border-surface-800 bg-surface-950/50 text-surface-100 placeholder-surface-650 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all text-sm"
               placeholder="••••••••"
+              style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #404040', backgroundColor: '#171717', color: '#f5f5f5', fontSize: '14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
           </div>
 
-          {/* Error and Success notifications */}
           {errorMsg && (
-            <div className="p-3 rounded-xl border border-red-500/20 bg-red-500/10 text-xs text-red-400 flex items-start gap-2.5">
-              <span>⚠️</span>
-              <span>{errorMsg}</span>
+            <div style={{ marginBottom: '16px', padding: '12px 14px', borderRadius: '10px', backgroundColor: 'rgba(248, 113, 113, 0.1)', border: '1px solid rgba(248, 113, 113, 0.3)', fontSize: '13px', color: '#f87171' }}>
+              {errorMsg}
             </div>
           )}
 
           {successMsg && (
-            <div className="p-3 rounded-xl border border-green-500/20 bg-green-500/10 text-xs text-green-400 flex items-start gap-2.5">
-              <span>✅</span>
-              <span>{successMsg}</span>
+            <div style={{ marginBottom: '16px', padding: '12px 14px', borderRadius: '10px', backgroundColor: 'rgba(52, 211, 153, 0.1)', border: '1px solid rgba(52, 211, 153, 0.3)', fontSize: '13px', color: '#34d399' }}>
+              {successMsg}
             </div>
           )}
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-surface-100 text-sm font-semibold shadow-lg shadow-primary-500/20 hover:shadow-primary-500/30 transition-all flex items-center justify-center disabled:opacity-55 active:scale-98"
+            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#10b981', color: 'white', fontSize: '14px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1, fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             {loading ? (
-              <span className="w-5 h-5 border-2 border-surface-100 border-t-transparent rounded-full animate-spin" />
-            ) : isRegistering ? (
-              'Sign Up'
-            ) : (
-              'Sign In'
-            )}
+              <span style={{ width: '18px', height: '18px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.6s linear infinite' }} />
+            ) : isRegistering ? 'Sign Up' : 'Sign In'}
           </button>
         </form>
 
-        {/* Toggle link */}
-        <div className="mt-8 text-center text-sm text-surface-400">
+        <p style={{ textAlign: 'center', fontSize: '13px', color: '#737373', marginTop: '24px' }}>
           {isRegistering ? 'Already have an account? ' : "Don't have an account? "}
           <button
             type="button"
-            onClick={() => {
-              setIsRegistering(!isRegistering);
-              setErrorMsg('');
-              setSuccessMsg('');
-            }}
-            className="text-primary-400 font-semibold hover:text-primary-300 focus:outline-none underline decoration-2 underline-offset-4"
+            onClick={() => { setIsRegistering(!isRegistering); setErrorMsg(''); setSuccessMsg(''); }}
+            style={{ background: 'none', border: 'none', color: '#34d399', fontWeight: 600, cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', padding: 0 }}
           >
-            {isRegistering ? 'Log In' : 'Sign Up'}
+            {isRegistering ? 'Sign In' : 'Sign Up'}
           </button>
-        </div>
+        </p>
       </div>
     </div>
   );

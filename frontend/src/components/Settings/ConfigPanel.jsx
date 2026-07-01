@@ -29,118 +29,120 @@ export default function ConfigPanel({ config, setConfig, session, onClose }) {
 
   const handleSave = async () => {
     setConfig(formData);
-    // Save to localStorage for local backup persistence
     localStorage.setItem('sprintgpt-config', JSON.stringify(formData));
-
-    // Sync configuration to the database
     if (session?.access_token) {
-      try {
-        await saveUserConfig(formData, session.access_token);
-      } catch (err) {
-        console.error('Failed to sync config to cloud database:', err);
-      }
+      try { await saveUserConfig(formData, session.access_token); }
+      catch (err) { console.error('Failed to sync config:', err); }
     }
-
     onClose();
   };
 
   const isComplete = formData.organization && formData.project && formData.pat;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-surface-900 border border-surface-700/50 rounded-2xl w-full max-w-md shadow-2xl">
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 50,
+        padding: '16px',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          backgroundColor: '#1f1f1f',
+          border: '1px solid #404040',
+          borderRadius: '16px',
+          width: '100%',
+          maxWidth: '440px',
+          overflow: 'hidden',
+        }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-surface-800">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #2e2e2e' }}>
           <div>
-            <h2 className="text-lg font-semibold text-surface-100">Azure DevOps Configuration</h2>
-            <p className="text-sm text-surface-400 mt-0.5">Connect to your project</p>
+            <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#f5f5f5', margin: 0 }}>Azure DevOps Configuration</h2>
+            <p style={{ fontSize: '13px', color: '#737373', margin: '4px 0 0' }}>Connect to your project</p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg hover:bg-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-200 transition-colors"
+            style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', backgroundColor: '#262626', color: '#a3a3a3', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}
           >
-            ✕
+            ×
           </button>
         </div>
 
         {/* Form */}
-        <div className="p-5 space-y-4">
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div>
-            <label htmlFor="config-org" className="block text-sm font-medium text-surface-300 mb-1.5">
-              Organization
-            </label>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#d4d4d4', marginBottom: '8px' }}>Organization</label>
             <input
-              id="config-org"
               type="text"
               value={formData.organization}
               onChange={(e) => handleChange('organization', e.target.value)}
               placeholder="e.g. my-company"
-              className="w-full px-3 py-2.5 bg-surface-800 border border-surface-700 rounded-xl text-sm text-surface-100 placeholder:text-surface-500 outline-none focus:border-primary-500/50 transition-colors"
+              style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #404040', backgroundColor: '#171717', color: '#f5f5f5', fontSize: '14px', outline: 'none', fontFamily: 'inherit' }}
             />
-            <p className="text-xs text-surface-500 mt-1">
-              From: dev.azure.com/<strong className="text-surface-400">your-org</strong>
-            </p>
+            <p style={{ fontSize: '11px', color: '#737373', margin: '6px 0 0' }}>From: dev.azure.com/<span style={{ color: '#a3a3a3' }}>your-org</span></p>
           </div>
 
           <div>
-            <label htmlFor="config-project" className="block text-sm font-medium text-surface-300 mb-1.5">
-              Project
-            </label>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#d4d4d4', marginBottom: '8px' }}>Project</label>
             <input
-              id="config-project"
               type="text"
               value={formData.project}
               onChange={(e) => handleChange('project', e.target.value)}
               placeholder="e.g. MyProject"
-              className="w-full px-3 py-2.5 bg-surface-800 border border-surface-700 rounded-xl text-sm text-surface-100 placeholder:text-surface-500 outline-none focus:border-primary-500/50 transition-colors"
+              style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #404040', backgroundColor: '#171717', color: '#f5f5f5', fontSize: '14px', outline: 'none', fontFamily: 'inherit' }}
             />
           </div>
 
           <div>
-            <label htmlFor="config-pat" className="block text-sm font-medium text-surface-300 mb-1.5">
-              Personal Access Token (PAT)
-            </label>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#d4d4d4', marginBottom: '8px' }}>Personal Access Token</label>
             <input
-              id="config-pat"
               type="password"
               value={formData.pat}
               onChange={(e) => handleChange('pat', e.target.value)}
               placeholder="Paste your PAT here"
-              className="w-full px-3 py-2.5 bg-surface-800 border border-surface-700 rounded-xl text-sm text-surface-100 placeholder:text-surface-500 outline-none focus:border-primary-500/50 transition-colors"
+              style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #404040', backgroundColor: '#171717', color: '#f5f5f5', fontSize: '14px', outline: 'none', fontFamily: 'inherit' }}
             />
-            <p className="text-xs text-surface-500 mt-1">
-              Create at: User Settings → Personal Access Tokens
-            </p>
           </div>
 
-          {/* Validation result */}
           {validationResult && (
-            <div
-              className={`p-3 rounded-xl text-sm ${
-                validationResult.valid
-                  ? 'bg-green-500/10 border border-green-500/30 text-green-400'
-                  : 'bg-red-500/10 border border-red-500/30 text-red-400'
-              }`}
-            >
-              {validationResult.valid ? '✅ ' : '❌ '}
-              {validationResult.message}
-            </div>
+            <p style={{
+              fontSize: '13px',
+              padding: '10px 14px',
+              borderRadius: '10px',
+              backgroundColor: validationResult.valid ? 'rgba(52, 211, 153, 0.1)' : 'rgba(248, 113, 113, 0.1)',
+              border: `1px solid ${validationResult.valid ? 'rgba(52, 211, 153, 0.3)' : 'rgba(248, 113, 113, 0.3)'}`,
+              color: validationResult.valid ? '#34d399' : '#f87171',
+              margin: 0,
+            }}>
+              {validationResult.valid ? '✓ ' : '✕ '}{validationResult.message}
+            </p>
           )}
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-3 p-5 border-t border-surface-800">
+        <div style={{ display: 'flex', gap: '12px', padding: '16px 24px 24px', borderTop: '1px solid #2e2e2e' }}>
           <button
             onClick={handleValidate}
             disabled={!isComplete || validating}
-            className="flex-1 px-4 py-2.5 bg-surface-800 hover:bg-surface-700 disabled:opacity-40 rounded-xl text-sm font-medium text-surface-200 transition-colors disabled:cursor-not-allowed"
+            style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #404040', backgroundColor: 'transparent', color: '#d4d4d4', fontSize: '13px', fontWeight: 500, cursor: isComplete && !validating ? 'pointer' : 'not-allowed', opacity: isComplete ? 1 : 0.4, fontFamily: 'inherit' }}
           >
-            {validating ? 'Validating...' : 'Test Connection'}
+            {validating ? 'Testing...' : 'Test Connection'}
           </button>
           <button
             onClick={handleSave}
             disabled={!isComplete}
-            className="flex-1 px-4 py-2.5 bg-primary-600 hover:bg-primary-500 disabled:opacity-40 rounded-xl text-sm font-medium text-white transition-colors disabled:cursor-not-allowed"
+            style={{ flex: 1, padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#10b981', color: 'white', fontSize: '13px', fontWeight: 600, cursor: isComplete ? 'pointer' : 'not-allowed', opacity: isComplete ? 1 : 0.4, fontFamily: 'inherit' }}
           >
             Save & Connect
           </button>
