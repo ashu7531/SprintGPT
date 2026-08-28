@@ -144,7 +144,7 @@ export default function App() {
       {/* Main content */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Slim top bar with toggle */}
-        <div style={{ flexShrink: 0, padding: '12px 24px', display: 'flex', alignItems: 'center' }}>
+        <div style={{ flexShrink: 0, padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             style={{ padding: '6px', borderRadius: '6px', border: 'none', backgroundColor: 'transparent', color: '#737373', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -153,6 +153,15 @@ export default function App() {
               <path fillRule="evenodd" d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75Zm0 10.5a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75ZM2 10a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 2 10Z" clipRule="evenodd" />
             </svg>
           </button>
+          
+          {!isConfigured && (
+            <div style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)', color: '#fbbf24', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style={{ width: '16px', height: '16px' }}>
+                <path fillRule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z" clipRule="evenodd" />
+              </svg>
+              <span>By default, a demo project is connected. Please update your Settings to connect your real project.</span>
+            </div>
+          )}
         </div>
 
         {/* Chat */}
